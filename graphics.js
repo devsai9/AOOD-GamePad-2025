@@ -5,7 +5,7 @@ canvas.textContent = "Your ancient browser doesn't support canvas";
 /*
 
              -height/2
-                 ^        
+                 ^
                  |
                  |
 -width/2 <-------+-------> +width/2
@@ -35,7 +35,7 @@ const RATIO = 16 / 9;
 function handleResize() {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    
+
     canvas.width = width * window.devicePixelRatio;
     canvas.height = height * window.devicePixelRatio;
 
@@ -63,15 +63,15 @@ function transformK(k) {
 // Exports
 
 /**
- * @param { ImageBitmap } image 
- * @param { number } x 
- * @param { number } y 
+ * @param { ImageBitmap } image
+ * @param { number } x
+ * @param { number } y
  */
 export function drawImage(image, [x, y]) {
     ctx.drawImage(
-        image, 
-        transformX(x), 
-        transformY(y), 
+        image,
+        transformX(x),
+        transformY(y),
         transformK(image.width),
         transformK(image.height)
     );
@@ -80,8 +80,8 @@ export function drawImage(image, [x, y]) {
 export function fillRect([x, y], w, h) {
     const s = ScreenProxy.scale;
     ctx.fillRect(
-        transformX(x), 
-        transformY(y), 
+        transformX(x),
+        transformY(y),
         transformK(w),
         transformK(h)
     );
