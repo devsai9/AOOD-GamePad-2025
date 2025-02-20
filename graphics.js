@@ -171,8 +171,17 @@ export function fill() {
     ctx.fill();
 }
 
+let c = 0;
 export function setLineWidth(w) {
+
+    if (c < 2) {
+        console.log("setting line width", transformK(w))
+    }
     ctx.lineWidth = transformK(w);
+    if (c < 2) {
+        console.log("got line width", ctx.lineWidth)
+    }
+    c++;
 }
 
 export function setLineCap(s) {
