@@ -33,28 +33,34 @@ bg: #d9b962
     */
 
 /** @type { Player[] } */
-const players = [];
+let  players = [];
+let nonGamepadPlayers = 0;
 // players.push(new MachinePlayer());
+
+players.push(new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD")));
+players.push(new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight")));
+nonGamepadPlayers += 2;
+
 
 window.addEventListener("gamepadconnected", (e) => {
     console.log(e.gamepad);
     players.push(new Player(Input.fromGamepad(e.gamepad), e.gamepad.index));
 });
 window.addEventListener("gamepaddisconnected", (e) => {
+    console.log(players)
     for (let i = 0; i++; i < players.length()) {
-        const player = players[i];
+        const player = players[i + noneGamepadPlayers];
         if (player.getIndex() == e.gamepad.index) {
             // remove player from player array
-            players.splice(i, 11);
-
+            players = players.splice(i, 1);
+            
         }
-    } 
+    }
+    console.log(players)
     console.log("a player left");
-    location.reload();
+    // location.reload();
 });
 
-players.push(new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD")));
-players.push(new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight")));
 
 
 function draw() {
