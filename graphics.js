@@ -4,15 +4,15 @@ canvas.textContent = "Your ancient browser doesn't support canvas";
 
 /*
 
-             -height/2
-                 ^
-                 |
-                 |
--width/2 <-------+-------> +width/2
-                 |
-                 |
-                 v
-             +height/2
+             -1
+             ^
+             |
+             |
+-16/9 <------+------> +16/9
+             |
+             |
+             v
+             +1
 
 Origin at center of screen
 
@@ -48,14 +48,29 @@ handleResize();
 window.addEventListener("resize", handleResize);
 document.body.appendChild(canvas);
 
+/**
+ * Transform logical X coordinate to screen X coordinate
+ * @param { number } x 
+ * @returns { number }
+ */
 function transformX(x) {
     return x * ScreenProxy.scale + ScreenProxy.offsetX;
 }
 
+/**
+ * Transform logical Y coordinate to screen Y coordinate
+ * @param { number } y 
+ * @returns { number }
+ */
 function transformY(y) {
     return y * ScreenProxy.scale + ScreenProxy.offsetY;
 }
 
+/**
+ * Transform logical length to screen length
+ * @param { number } k
+ * @returns { number }
+ */
 function transformK(k) {
     return k * ScreenProxy.scale;
 }
@@ -78,7 +93,6 @@ export function drawImage(image, [x, y]) {
 }
 
 export function fillRect([x, y], w, h) {
-    const s = ScreenProxy.scale;
     ctx.fillRect(
         transformX(x),
         transformY(y),
@@ -174,16 +188,20 @@ export function fill() {
 let c = 0;
 export function setLineWidth(w) {
 
-    if (c < 2) {
-        console.log("setting line width", transformK(w))
-    }
+    // if (c < 2) {
+    //     console.log("setting line width", transformK(w))
+    // }
     ctx.lineWidth = transformK(w);
-    if (c < 2) {
-        console.log("got line width", ctx.lineWidth)
-    }
+    // if (c < 2) {
+    //     console.log("got line width", ctx.lineWidth)
+    // }
     c++;
 }
 
 export function setLineCap(s) {
     ctx.lineCap = s;
+}
+
+export function setLineDash(d) {
+    ctx.setLineDash(d.map(transformK));
 }
