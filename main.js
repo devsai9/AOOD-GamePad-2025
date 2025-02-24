@@ -1,66 +1,43 @@
 import * as G from "./graphics.js";
-import { Input, Player, MachinePlayer } from "./players.js";
+import { Input, Player } from "./players.js";
 import { Track } from "./track.js";
 import { State } from "./state.js";
 import { Vec2 } from "./vector.js";
 
-/*
 
-- Palette for different biomes -
-[Plains]
-bg: #8de645
-
-[Desert]
-bg: #d9b962
-
-*/
-
-/*
-{
-    type: GAMEPAD || KEYBOARD
-    object: gamepadIndex || key bindings
-}
-
-
-
-    player.update() {
-    if input.type == GAMEPAD {
-    //
-    }
-    elif
-    }
-
-    */
-
-/** @type { Player[] } */
-let  players = [];
+const collisionBodies = [];
 let nonGamepadPlayers = 0;
-// players.push(new MachinePlayer());
-
-players.push(new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD")));
-players.push(new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight")));
+// players.push(new Player(Input.fromMachine({
+//     vel(self) {
+//         return [0.001, 0];
+//     }
+// })));
+const wsadPlayer = new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD"));
+const arrowPlayer = new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"));
+State.players.push(wsadPlayer);
+State.players.push(arrowPlayer);
+State.registerCollider(wsadPlayer);
+State.registerCollider(arrowPlayer);
 nonGamepadPlayers += 2;
 
 
 window.addEventListener("gamepadconnected", (e) => {
-    console.log(e.gamepad);
-    players.push(new Player(Input.fromGamepad(e.gamepad), e.gamepad.index));
+    console.log("Controller connected: " + e.gamepad);
+    let newPlayer = new Player(Input.fromGamepad(e.gamepad), e.gamepad.index)
+    State.players.push(newPlayer);
+    State.registerCollider(newPlayer)
 });
 window.addEventListener("gamepaddisconnected", (e) => {
-    console.log(players)
-    for (let i = 0; i++; i < players.length()) {
-        const player = players[i + noneGamepadPlayers];
+    for (let i = 0; i++; i < State.players.length()) {
+        const player = State.players[i + nonGamepadPlayers];
         if (player.getIndex() == e.gamepad.index) {
             // remove player from player array
-            players = players.splice(i, 1);
+            State.players = State.players.splice(i, 1);
             
         }
     }
-    console.log(players)
     console.log("a player left");
-    // location.reload();
 });
-
 
 
 function draw() {
@@ -69,17 +46,65 @@ function draw() {
     G.setLineCap(G.CapStyle.ROUND);
 
     // drawRoad([[0.5, 0], [0.5, 0.5], [1.0, 0.5]]);
-    track.draw();
+    State.track.draw();
 
-    for (const player of players) {
+
+    for (const collisionBody of collisionBodies) {
+        G.setFill("red");
+        drawBox(collisionBody.position, collisionBody.height, collisionBody.width, 0);
+    }
+
+
+    for (const player of State.players) {
         // create a square and get the players positions
         G.setFill(player.color);
-        drawBox(player.position, 0.1, 0.05, player.direction);
+        drawBox(player.position, 0.1 * 0.75, 0.05 * 0.75, player.direction);
+        G.setFill("#ff0000");
+        G.fillCircle(Vec2.sum(player.position, Vec2.rotate([0.05, 0], player.direction)), 0.01);
+        G.setFill("#00ffff");
+        G.fillCircle(Vec2.sum(player.position, Vec2.scale(player.velocity, 10)), 0.01);
         //G.fillRect([player.getX() - 0.025, player.getY() - 0.025], 0.05, 0.05);
     }
 
     G.maskEdge();
 }
+
+
+class CollisionBody {
+    constructor(position, width, height) {
+        this.position = position;
+        this.width = width;
+        this.height = height;
+        collisionBodies.push(this);
+        State.registerCollisionBody(this);
+    }
+
+    handleCollision(player) {
+        console.log("player " + player + " has collided with self")
+    }
+    
+    remove() {
+        collisionBodies.splice(collisionBodies.indexOf(this), 1);
+        State.unregisterCollisionBody(this);
+    }
+}
+
+class Powerup extends CollisionBody {
+    constructor(position, width, height, type, durationSeconds) {
+        super(position, width, height);
+        this.type = type;
+        this.durationSeconds = durationSeconds;
+    }
+
+    handleCollision(player) {
+        player.activatePowerup(this.type, this.durationSeconds);
+        super.remove();
+    }
+}
+
+// new CollisionBody([0, -.4], 0.2, 0.2);
+new Powerup([.2, 0-.5], 0.2, 0.2, "speed", 5);
+
 
 function drawBox([x, y], w, h, dir) {
     G.beginPath();
@@ -96,12 +121,29 @@ function drawBox([x, y], w, h, dir) {
     G.fill();
 }
 
-const track = new Track(
-    [ [-1.2, -0.5], /* [0, -0.5], */ [1.2, -0.5], [1.2, 0.5], /* [0, 0.5], */ [-1.2, 0.5] ], // pins
-    [ [0.25, -0.25], /* [0.25, 0], */ [0.25, 0.25], [-0.25, 0.25], /* [-0.25, 0], */ [-0.25, -0.25] ] // tangents
+// const track = new Track(
+//     [ [-1.2, -0.5], /* [0, -0.5], */ [1.2, -0.5], [1.2, 0.5], /* [0, 0.5], */ [-1.2, 0.5] ], // pins
+//     [ [0.25, -0.25], /* [0.25, 0], */ [0.25, 0.25], [-0.25, 0.25], /* [-0.25, 0], */ [-0.25, -0.25] ] // tangents
+// );
+
+State.track = Track.parse(
+    `-3.43	-4.1
+-7.3	-1.84
+-7.47	4.06
+0.13	2.7
+7.52	1.76
+7.57	-1.83
+3.42	-4.51`,
+    `-7.28	-4.44
+-6.29	-0.18
+-5.65	4.87
+2.83	7.37
+3.34	-0.17
+9.1	-2.62
+0.85	-3`
 );
 
-State.track = track;
+// console.log(State.track)
 
 function drawRoad(points) {
     // Black road
@@ -149,10 +191,41 @@ function updateGame(timestamp) {
     }
     const delta = timestamp - lastTime;
 
-    for (const player of players) {
+    for (const player of State.players) {
         player.update(delta);
     }
+    State.checkCollisions();
     lastTime = timestamp;
     draw();
     requestAnimationFrame(updateGame);
 }
+
+
+
+/*
+
+- Palette for different biomes -
+[Plains]
+bg: #8de645
+
+[Desert]
+bg: #d9b962
+
+*/
+
+/*
+{
+    type: GAMEPAD || KEYBOARD
+    object: gamepadIndex || key bindings
+}
+
+
+
+    player.update() {
+    if input.type == GAMEPAD {
+    //
+    }
+    elif
+    }
+
+    */

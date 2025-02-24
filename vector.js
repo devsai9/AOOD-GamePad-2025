@@ -35,5 +35,6 @@ export const Vec2 = {
             yt += arr[i][1];
         }
         return [xt, yt];
-    }
+    },
+    dir: (theta) => [Math.cos(theta), Math.sin(theta)]
 };

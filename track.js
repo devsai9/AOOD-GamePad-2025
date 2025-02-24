@@ -5,6 +5,9 @@ import { Vec2 } from "./vector.js";
  * @typedef { import("./vector.js").Vec2 } Vec2
  */
 
+const ROAD_SCALE = 0.75;
+const DOTS = [0.04, 0.08].map(x => x * ROAD_SCALE);
+
 function drawRaw(pins, tangents) {
     const len = pins.length;
     for (let i = 0; i < len; i++) {
@@ -16,6 +19,18 @@ function drawRaw(pins, tangents) {
         G.bezierTo(ctrl1, ctrl2, end);
         G.stroke();
     }
+}
+
+/**
+ * 
+ * @param { string } l 
+ * @return { Vec2[] }
+ */
+function transformDesmosData(l) {
+    return l.split("\n")
+        .map(v => v.split("\t")
+        .map(n => Number.parseFloat(n) * 1.6 / 9))
+        .map(([x, y]) => [x, -y]);
 }
 
 function cubicBezier(t, p1, p2, p3, p4) {
@@ -40,7 +55,18 @@ export class Track {
             main: "#272747",
             dash: "#ffff00"
         };
-        this.width = 0.15;
+        this.width = 0.15 * ROAD_SCALE;
+    }
+
+    /**
+     * @param { string } pins 
+     * @param { string } tangents 
+     * @returns 
+     */
+    static parse(pins, tangents) {
+        const p = transformDesmosData(pins);
+        const t = transformDesmosData(tangents).map((tangent, i) => Vec2.diff(tangent, p[i]));
+        return new Track(p, t);
     }
 
     draw() {
@@ -52,11 +78,11 @@ export class Track {
 
         G.beginPath();
         G.setStroke(this.style.main);
-        G.setLineWidth(this.width - 0.03);
+        G.setLineWidth(this.width - 0.03 * ROAD_SCALE);
         drawRaw(this.pins, this.tangents);
         
         G.beginPath();
-        G.setLineDash([0.04, 0.08]);
+        G.setLineDash(DOTS);
         G.setStroke(this.style.dash);
         G.setLineWidth(0.01);
         drawRaw(this.pins, this.tangents);

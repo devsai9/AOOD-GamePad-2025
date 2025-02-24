@@ -205,3 +205,9 @@ export function setLineCap(s) {
 export function setLineDash(d) {
     ctx.setLineDash(d.map(transformK));
 }
+
+export function fillCircle([x, y], r) {
+    ctx.beginPath();
+    ctx.arc(transformX(x), transformY(y), transformK(r), 0, 2 * Math.PI);
+    ctx.fill();
+}
