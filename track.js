@@ -21,6 +21,19 @@ function drawRaw(pins, tangents) {
     }
 }
 
+const FINISH_SPAN = 0.1;
+const FINISH_COUNT_X = 2;
+const FINISH_COUNT_Y = 5;
+
+function drawFinish(pin, tangent) {
+    const squares = [];
+    for (let x = 0; x < FINISH_COUNT_X; x++) {
+        for (let y = 0; y < FINISH_COUNT_Y; y++) {
+            squares.push([FINISH_SPAN / FINISH_COUNT_X]);
+        }
+    }
+}
+
 /**
  * 
  * @param { string } l 
@@ -86,20 +99,11 @@ export class Track {
         G.setStroke(this.style.dash);
         G.setLineWidth(0.01);
         drawRaw(this.pins, this.tangents);
-    }
 
-    drawRaw() {
-        const len = this.pins.length;
-        for (let i = 0; i < len; i++) {
-            const start = this.pins[i];
-            const ctrl1 = Vec2.sum(start, this.tangents[i]);
-            const end = this.pins[i + 1] || this.pins[0];
-            const ctrl2 = Vec2.diff(end, this.tangents[i + 1] || this.tangents[0]);
-            G.moveTo(start);
-            G.bezierTo(ctrl1, ctrl2, end);
-            G.stroke();
+        G.setFill("#f0f0ff");
+        for (const p of this.pins) {
+            G.fillCircle(p, 0.05);
         }
-
     }
 
     isOnTrack(point) {

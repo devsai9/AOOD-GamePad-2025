@@ -68,7 +68,6 @@ export const Input = {
     }),
 };
 
-
 let playerCount = 0;
 
 export class Player {
@@ -79,13 +78,11 @@ export class Player {
 
     colliding = false;
     speedMultiplier = 1;
+    frictionLess = false;
 
     /**
      * @param { InputMethod } inputMethod
      */
-    // constructor(inputInfo) {
-    //    this.inputInfo = inputInfo;
-    // }
     constructor(inputMethod) {
         playerCount++;
         this.inputMethod = inputMethod;
@@ -101,7 +98,7 @@ export class Player {
         const dir = this.velocity; //Vec2.norm(this.velocity);
         const friction = Vec2.scale(
             dir,
-            this.weight, /* * (State.track.isOnTrack(this.position) ? 1 : 5)*/
+            this.weight * (State.track.isOnTrack(this.position) ? 1 : (!this.frictionLess ? 5 : 1)),
         );
         if (Vec2.len(friction) > Vec2.len(this.velocity)) {
             this.velocity[0] = 0;
@@ -177,12 +174,12 @@ export class Player {
     }
 
     handleCollision(otherCar) {
+        if (this.colliding) return;
         this.colliding = true;
         console.log("collided");
 
         // punish them somehow, other than this
         this.velocity = [0, 0];
-      
 
         setTimeout(() => {
             this.colliding = false;
@@ -190,31 +187,31 @@ export class Player {
     }
 
     activatePowerup(type, duration) {
-      switch (type) {
-         case "speed":
-            this.speedMultiplier * 20;
-            setTimeout(() => {
-               console.log("powerup removed")
-               this.speedMultiplier / 20;
-            }, duration * 1000);
-            break;
-         default:
-            console.log("powerup has no valid type")
-            break;
-      }
+        switch (type) {
+            case "speed":
+                this.speedMultiplier *= 2;
+                setTimeout(() => {
+                    console.log("speed powerup removed");
+                    this.speedMultiplier /= 2;
+                }, duration * 1000);
+                break;
+            case "shield":
+                this.colliding = true;
+                setTimeout(() => {
+                    console.log("shield powerup removed");
+                    this.colliding = false;
+                }, duration * 1000);
+                break;
+            case "frictionless":
+                this.frictionLess = true;
+                setTimeout(() => {
+                    console.log("frictionless powerup removed");
+                    this.frictionLess = false;
+                }, duration * 1000);
+                break;
+            default:
+                console.log("powerup has no valid type");
+                break;
+        }
     }
 }
-
-// export class MachinePlayer extends Player {
-//    constructor() {
-//       super(null, null);
-//       setInterval(() => {
-//          console.log("AI Player Engaged")
-//       }, 10);
-//    }
-
-//    update(delta) {
-//       // add fake user input
-//       super.update(delta);
-//    }
-// }

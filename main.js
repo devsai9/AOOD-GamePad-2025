@@ -3,9 +3,9 @@ import { Input, Player } from "./players.js";
 import { Track } from "./track.js";
 import { State } from "./state.js";
 import { Vec2 } from "./vector.js";
+import { CollisionBody, Powerup } from "./collisionBody.js";
 
 
-const collisionBodies = [];
 let nonGamepadPlayers = 0;
 // players.push(new Player(Input.fromMachine({
 //     vel(self) {
@@ -22,7 +22,6 @@ nonGamepadPlayers += 2;
 
 
 window.addEventListener("gamepadconnected", (e) => {
-    console.log("Controller connected: " + e.gamepad);
     let newPlayer = new Player(Input.fromGamepad(e.gamepad), e.gamepad.index)
     State.players.push(newPlayer);
     State.registerCollider(newPlayer)
@@ -36,7 +35,6 @@ window.addEventListener("gamepaddisconnected", (e) => {
             
         }
     }
-    console.log("a player left");
 });
 
 
@@ -49,8 +47,8 @@ function draw() {
     State.track.draw();
 
 
-    for (const collisionBody of collisionBodies) {
-        G.setFill("red");
+    for (const collisionBody of State.collisionBodies) {
+        G.setFill(collisionBody.color);
         drawBox(collisionBody.position, collisionBody.height, collisionBody.width, 0);
     }
 
@@ -69,41 +67,9 @@ function draw() {
     G.maskEdge();
 }
 
-
-class CollisionBody {
-    constructor(position, width, height) {
-        this.position = position;
-        this.width = width;
-        this.height = height;
-        collisionBodies.push(this);
-        State.registerCollisionBody(this);
-    }
-
-    handleCollision(player) {
-        console.log("player " + player + " has collided with self")
-    }
-    
-    remove() {
-        collisionBodies.splice(collisionBodies.indexOf(this), 1);
-        State.unregisterCollisionBody(this);
-    }
-}
-
-class Powerup extends CollisionBody {
-    constructor(position, width, height, type, durationSeconds) {
-        super(position, width, height);
-        this.type = type;
-        this.durationSeconds = durationSeconds;
-    }
-
-    handleCollision(player) {
-        player.activatePowerup(this.type, this.durationSeconds);
-        super.remove();
-    }
-}
-
 // new CollisionBody([0, -.4], 0.2, 0.2);
-new Powerup([.2, 0-.5], 0.2, 0.2, "speed", 5);
+new Powerup([.2, -.5], 0.2, 0.2, "frictionless", 5);
+new Powerup([-.2, -.5], 0.2, 0.2, "speed", 5);
 
 
 function drawBox([x, y], w, h, dir) {
@@ -143,7 +109,6 @@ State.track = Track.parse(
 0.85	-3`
 );
 
-// console.log(State.track)
 
 function drawRoad(points) {
     // Black road
