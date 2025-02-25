@@ -47,6 +47,7 @@ export const Input = {
         index: gamepad.index,
         update(self, delta) {
             const actual = navigator.getGamepads()[this.index];
+            if (!actual) return;
             const x = actual.axes[0];
             const y = actual.axes[1];
             // console.log("Gamepad", x, y);
@@ -76,6 +77,7 @@ const PLAYER_BEGIN = 0.06;
 
 export class Player {
     color = "#f826b9";
+    id = -1;
 
     position = [0, -0.6];
     velocity = [0, 0];
@@ -92,12 +94,12 @@ export class Player {
     /**
      * @param { InputMethod } inputMethod
      */
-    constructor(inputMethod) {
+    constructor(inputMethod, id) {
+        this.id = id;
         this.inputMethod = inputMethod;
         this.weight = 0.02;
         this.direction = Math.PI;
-        this.color = "#" +
-            (Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, "0");
+        this.color = "#" + (Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, "0");
         //this.position[1] -= playerCount * .07;
         const pins = State.track.pins;
         const tangents = State.track.tangents;
@@ -243,6 +245,7 @@ export class Player {
         console.log("checking")
         if (checkOld === State.track.pins.length - 1) {
             this.laps++;
+            State.scoreboard.updateScores();
             console.log("next lap");
             return checkNew === 0;
         }

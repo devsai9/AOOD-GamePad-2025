@@ -18,6 +18,12 @@ export const State = {
         this.colliders.push(collider);
     },
 
+    unregisterCollider(collider) {
+        console.log(this.colliders)
+        this.colliders.splice(this.colliders.indexOf(collider), 1);
+        console.log(this.colliders)
+    },
+
     checkCollisions() {
         const colliderWidth = 0.1 * 0.75;
         const colliderHeight = 0.05 * 0.75;
@@ -81,6 +87,11 @@ export const State = {
             }
         }
     },
+
+    registerScoreboard(scoreboard) {
+        this.scoreboard = scoreboard;
+        scoreboard.updateScores();
+    }
 };
 
 function rectanglesColliding([x1, y1], w1, h1, [x2, y2], w2, h2) {
@@ -116,4 +127,19 @@ function rectangleCircleColliding([rectX, rectY], rectW, rectH, [circleX, circle
         return true;
     }
     return false;
+}
+
+
+export class Scoreboard {
+    constructor(element) {
+        this.element = element;
+    }
+
+    updateScores() {
+        let output = "";
+        for (const player of State.colliders) {
+            output += `<span style="background-color: ${player.color}">Score: ${player.laps}</span><br>`;
+        }
+        this.element.innerHTML = output;
+    }
 }

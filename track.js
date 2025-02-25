@@ -47,8 +47,39 @@ function drawFinish(self, pin, tangent) {
     }
 }
 
+const flagVertices = {
+    x: [0, 0.6, -0.4, -0.4, -0.5, -0.5, 0.6],
+    y: [0.5, 0.1, 0.1, -1, -1, 0.9, 0.9]
+};
+const flagPalette = [
+    "#a83232",
+    "#d1883f",
+    //"#d1d13f",
+    "#70d13f",
+    "#3fd1b9",
+    "#3f3fd1",
+    "#d13fd1",
+    "#d13f88"
+];
+
 function drawCheckpoint(self, pin, tangent, id) {
-    new Checkpoint(pin, 0.175, id);
+    const offset = Vec2.perp(Vec2.norm(tangent));
+    const pos = Vec2.sum(Vec2.scale(offset, -0.15), pin);
+
+    
+    
+    G.setFill(flagPalette[id - 1]);
+    //G.fillRect(pos, 0.1, 0.1);
+
+
+    G.beginPath();
+    for (let i = 0; i < flagVertices.x.length; i++) {
+        const p = [flagVertices.x[i], -flagVertices.y[i]];
+        const vert = Vec2.sum(pos, Vec2.scale(p, 0.075));
+        if (i === 0) G.moveTo(vert);
+        else G.lineTo(vert);
+    }
+    G.fill();
 }
 
 /**
@@ -79,7 +110,7 @@ export function cubicBezierTangent(t, p1, p2, p3, p4) {
     return Vec2.total(c1, c2, c3, c4);
 }
 
-const CHECKPOINT_SIZE = ROAD_SCALE * 1.2 * 0.1;
+const CHECKPOINT_SIZE = ROAD_SCALE * 1.4 * 0.1;
 
 export class Track {
     /**
@@ -131,13 +162,32 @@ export class Track {
         G.setLineWidth(0.01);
         drawRaw(this.pins, this.tangents);
 
-        for (const [i, p] of this.pins.entries()) {
-            if (i === 0) G.setFill("#40d291");
-            else G.setFill("#f0f0ff");
-            G.fillCircle(p, CHECKPOINT_SIZE);
-        }
+        // for (const [i, p] of this.pins.entries()) {
+        //     if (i === 0) G.setFill("#40d291");
+        //     else G.setFill("#f0f0ff");
+        //     G.fillCircle(p, CHECKPOINT_SIZE);
+        // }
 
-        drawFinish(this, this.pins[0], this.tangents[0]);
+        const finishPos = cubicBezier(
+            0.03,
+            this.pins[0],
+            Vec2.sum(this.pins[0], this.tangents[0]),
+            Vec2.diff(this.pins[1], this.tangents[1]),
+            this.pins[1]
+        );
+        const finishDir = cubicBezierTangent(
+            0.03,
+            this.pins[0],
+            Vec2.sum(this.pins[0], this.tangents[0]),
+            Vec2.diff(this.pins[1], this.tangents[1]),
+            this.pins[1]
+        );
+
+        drawFinish(this, finishPos, finishDir);
+
+        for (let i = 1; i < this.pins.length; i++) {
+            drawCheckpoint(this, this.pins[i], this.tangents[i], i);
+        }
         
     }
 
@@ -152,6 +202,26 @@ export class Track {
         }
         
         return false;
+    }
+
+    getNearestPoint(point) {
+        let min = Infinity;
+        let found = null;
+        for (let i = 0; i < this.pins.length; i++) {
+            const start = this.pins[i];
+            const ctrl1 = Vec2.sum(start, this.tangents[i]);
+            const end = this.pins[i + 1] || this.pins[0];
+            const ctrl2 = Vec2.diff(end, this.tangents[i + 1] || this.tangents[0]);
+            
+            const pt = this.findNearestPoint(point, start, ctrl1, ctrl2, end);
+            const dis = Vec2.dist(pt, point);
+            if (dis < min) {
+                min = dis;
+                found = pt;
+            }
+        }
+        
+        return found;
     }
 
     queryCheckpoint(pos) {

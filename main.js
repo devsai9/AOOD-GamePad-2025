@@ -1,7 +1,7 @@
 import * as G from "./graphics.js";
 import { Input, Player } from "./players.js";
 import { Track } from "./track.js";
-import { State } from "./state.js";
+import { State, Scoreboard } from "./state.js";
 import { Vec2 } from "./vector.js";
 import { CollisionBody, Powerup } from "./collisionBody.js";
 
@@ -23,11 +23,14 @@ State.track = Track.parse(
 );
 
 let nonGamepadPlayers = 0;
-// players.push(new Player(Input.fromMachine({
+
+// let machinePlayer = new Player(Input.fromMachine({
 //     vel(self) {
 //         return [0.001, 0];
 //     }
-// })));
+// }));
+// State.players.push(machinePlayer);
+// State.registerCollider(machinePlayer);
 const wsadPlayer = new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD"));
 const arrowPlayer = new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"));
 State.players.push(wsadPlayer);
@@ -36,21 +39,27 @@ State.registerCollider(wsadPlayer);
 State.registerCollider(arrowPlayer);
 nonGamepadPlayers += 2;
 
+let scoreboardElement = document.querySelector(".scoreboard");
+let scoreboard = new Scoreboard(scoreboardElement);
+State.registerScoreboard(scoreboard);
+
 
 window.addEventListener("gamepadconnected", (e) => {
     let newPlayer = new Player(Input.fromGamepad(e.gamepad), e.gamepad.index)
     State.players.push(newPlayer);
-    State.registerCollider(newPlayer)
+    State.registerCollider(newPlayer);
+    State.scoreboard.updateScores();
 });
 window.addEventListener("gamepaddisconnected", (e) => {
-    for (let i = 0; i++; i < State.players.length()) {
+    for (let i = 0; i < State.players.length; i++) {
         const player = State.players[i + nonGamepadPlayers];
         if (player.getIndex() == e.gamepad.index) {
             // remove player from player array
+            State.unregisterCollider(player);
             State.players = State.players.splice(i, 1);
-            
         }
     }
+    State.scoreboard.updateScores();
 });
 
 
@@ -93,7 +102,7 @@ function draw() {
 }
 
 // new CollisionBody([0, -.4], 0.2, 0.2);
-new Powerup([.2, -.5], 0.2, 0.2, "frictionless", 5, Infinity, 5);
+new Powerup(State.track.getNearestPoint([.2, -.5]), 0.2, 0.2, "frictionless", 5, Infinity, 5);
 // new Powerup([-.2, -.5], 0.2, 0.2, "speed", 5, 2, 1);
 
 
@@ -142,7 +151,6 @@ function updateGame(timestamp) {
     draw();
     requestAnimationFrame(updateGame);
 }
-
 
 
 /*
