@@ -245,7 +245,6 @@ export class Player {
         console.log("checking")
         if (checkOld === State.track.pins.length - 1) {
             this.laps++;
-            State.scoreboard.updateScores();
             console.log("next lap");
             return checkNew === 0;
         }
@@ -259,6 +258,7 @@ export class Player {
             if (this.pendingCheckpoint === -1) return;
             // Successfully collected a checkpoint
             const checkNew = this.pendingCheckpoint;
+            State.track.status[checkNew] = 1;
             this.pendingCheckpoint = -1;
             if (this.verifyCheckpoint(this.committedCheckpoint, checkNew)) {
                 this.committedCheckpoint = checkNew;
@@ -267,6 +267,7 @@ export class Player {
                 console.log("failure")
                 this.committedCheckpoint = 0;
             }
+            State.scoreboard.updateScores();
         }
         else {
             this.pendingCheckpoint = checkpoint;

@@ -42,6 +42,15 @@ export class Checkpoint extends CollisionBody {
 }
 
 export class Powerup extends CollisionBody {
+    /** 
+     * @param {Vec2} position
+     * @param {number} width
+     * @param {number} height
+     * @param {string} type
+     * @param {number} durationSeconds
+     * @param {number} usageTimes
+     * @param {number} regenerateTimeSeconds
+    */
     constructor(position, width, height, type, durationSeconds, usageTimes, regenerateTimeSeconds) {
         super(position, width, height);
         this.type = type;

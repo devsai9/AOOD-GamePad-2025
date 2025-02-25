@@ -31,5 +31,11 @@ canvas {
    box-shadow: 0 .2rem .2rem #00000040;
    text-shadow: 0 .1rem .1rem #00000040;
    font-family: sans-serif;
-   font-size: 1.5rem;
+   font-size: 1.3rem;
+}
+
+.score-entry {
+   border-radius: 5px;
+   -moz-user-select: none;
+   user-select: none;
 }

@@ -17,15 +17,12 @@ canvas.textContent = "Your ancient browser doesn't support canvas";
              +1
 
 Origin at center of screen
-
-
 */
 
-export const CapStyle = Object.freeze({
-    BUTT: "butt",
-    ROUND: "round",
-    SQUARE: "square"
-});
+/**
+ * @typedef { "bevel" | "miter" | "round" } LineJoin
+ * @typedef { "butt" | "round" | "square" } LineCap
+ */
 
 const ScreenProxy = {
     offsetX: 0,
@@ -215,8 +212,19 @@ export function setLineWidth(w) {
     c++;
 }
 
+/**
+ * @param { LineCap } s 
+ */
 export function setLineCap(s) {
     ctx.lineCap = s;
+}
+
+/**
+ * 
+ * @param { LineJoin } s 
+ */
+export function setLineJoin(s) {
+    ctx.lineJoin = s;
 }
 
 export function setLineDash(d) {

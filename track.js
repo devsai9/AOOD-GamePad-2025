@@ -27,6 +27,48 @@ const FINISH_COUNT_X = 3;
 const FINISH_COUNT_Y = 7;
 
 /**
+ * @param { number } num 
+ * @returns { string }
+ */
+function toNibble(num) {
+    return num.toString(16).padStart(2, "0");
+}
+
+function parseColor(hex) {
+    const n = Number.parseInt(hex.slice(1), 16);
+    let r = n >> 16;
+    let g = (n >> 8) % 0x100;
+    let b = n % 0x100;
+    return [r, g, b];
+}
+
+function hexify(r, g, b) {
+    r = Math.round(r);
+    g = Math.round(g);
+    b = Math.round(b);
+    return `#${toNibble(r)}${toNibble(g)}${toNibble(b)}`;
+}
+
+/**
+ * @param { string } hex 
+ */
+function darker(hex, k = 0.2) {
+    const [r, g, b] = parseColor(hex);
+    return hexify(r * k, g * k, b * k);
+}
+
+function mix(c1, c2, t) {
+    const [r1, g1, b1] = parseColor(c1);
+    const [r2, g2, b2] = parseColor(c2);
+
+    return hexify(
+        r1 * (1 - t) + r2 * t,
+        g1 * (1 - t) + g2 * t,
+        b1 * (1 - t) + b2 * t
+    );
+}
+
+/**
  * 
  * @param { Track } self 
  * @param { Vec2 } pin 
@@ -62,24 +104,47 @@ const flagPalette = [
     "#d13f88"
 ];
 
+/**
+ * 
+ * @param { Track } self 
+ * @param { Vec2 } pin 
+ * @param { Vec2 } tangent 
+ * @param { number } id 
+ */
 function drawCheckpoint(self, pin, tangent, id) {
     const offset = Vec2.perp(Vec2.norm(tangent));
-    const pos = Vec2.sum(Vec2.scale(offset, -0.15), pin);
+    const pos = Vec2.sum(Vec2.scale(offset, -0.125), pin);
 
-    
-    
-    G.setFill(flagPalette[id - 1]);
+    const color = flagPalette[id - 1];
+    const outer = darker(color, 0.5);
+    const fill = mix(color, "#ffffff", self.status[id]);
+    const stroke = mix(outer, "#ffffff", self.status[id]);
+    G.setFill(fill);
+    G.setLineDash([]);
+    G.setStroke(stroke);
+    G.setLineWidth(0.015);
+    G.setLineJoin("round");
+
     //G.fillRect(pos, 0.1, 0.1);
-
 
     G.beginPath();
     for (let i = 0; i < flagVertices.x.length; i++) {
-        const p = [flagVertices.x[i], -flagVertices.y[i]];
-        const vert = Vec2.sum(pos, Vec2.scale(p, 0.075));
+        const p = [(flagVertices.x[i] + 0.5), -(flagVertices.y[i] + 1)];
+        const vert = Vec2.sum(pos, Vec2.scale(p, 0.08));
         if (i === 0) G.moveTo(vert);
         else G.lineTo(vert);
     }
-    G.fill();
+    G.closePath();
+    G.stroke();
+
+    G.beginPath();
+    for (let i = 0; i < flagVertices.x.length; i++) {
+        const p = [(flagVertices.x[i] + 0.5), -(flagVertices.y[i] + 1)];
+        const vert = Vec2.sum(pos, Vec2.scale(p, 0.08));
+        if (i === 0) G.moveTo(vert);
+        else G.lineTo(vert);
+    }
+    G.fill();    
 }
 
 /**
@@ -127,6 +192,7 @@ export class Track {
             dash: "#ffff00"
         };
         this.width = 0.15 * ROAD_SCALE;
+        this.status = Array(pins.length).fill(0);
 
         for (let i = 1; i < this.pins.length; i++) {
             drawCheckpoint(this, this.pins[i], this.tangents[i], i);
@@ -184,11 +250,12 @@ export class Track {
         );
 
         drawFinish(this, finishPos, finishDir);
+    }
 
+    drawCheckpoints() {
         for (let i = 1; i < this.pins.length; i++) {
             drawCheckpoint(this, this.pins[i], this.tangents[i], i);
         }
-        
     }
 
     isOnTrack(point) {
@@ -248,5 +315,12 @@ export class Track {
         }
 
         return nearestPoint;
+    }
+
+    update(delta) {
+        for (let i = 0; i < this.status.length; i++) {
+            this.status[i] -= delta * 0.003;
+            this.status[i] = Math.max(0, this.status[i]);
+        }
     }
 }

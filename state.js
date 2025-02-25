@@ -19,9 +19,9 @@ export const State = {
     },
 
     unregisterCollider(collider) {
-        console.log(this.colliders)
+        // console.log(this.colliders)
         this.colliders.splice(this.colliders.indexOf(collider), 1);
-        console.log(this.colliders)
+        // console.log(this.colliders)
     },
 
     checkCollisions() {
@@ -133,12 +133,17 @@ function rectangleCircleColliding([rectX, rectY], rectW, rectH, [circleX, circle
 export class Scoreboard {
     constructor(element) {
         this.element = element;
+        this.players = null;
     }
 
     updateScores() {
+        if (this.players === null) this.players = [...State.colliders];
+        const checkpoints = State.track.pins.length;
+        const scorePlayer = (p) => p.laps + p.committedCheckpoint / checkpoints;
+        this.players.sort((a, b) => scorePlayer(b) - scorePlayer(a));
         let output = "";
-        for (const player of State.colliders) {
-            output += `<span style="background-color: ${player.color}">Score: ${player.laps}</span><br>`;
+        for (const player of this.players) {
+            output += `<span class="score-entry" style="background-color: ${player.color}">Score: ${player.laps} # ${player.committedCheckpoint}/${checkpoints}</span><br>`;
         }
         this.element.innerHTML = output;
     }

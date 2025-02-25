@@ -31,8 +31,8 @@ let nonGamepadPlayers = 0;
 // }));
 // State.players.push(machinePlayer);
 // State.registerCollider(machinePlayer);
-const wsadPlayer = new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD"));
-const arrowPlayer = new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"));
+const wsadPlayer = new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD"), 0);
+const arrowPlayer = new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"), 1);
 State.players.push(wsadPlayer);
 State.players.push(arrowPlayer);
 State.registerCollider(wsadPlayer);
@@ -45,23 +45,32 @@ State.registerScoreboard(scoreboard);
 
 
 window.addEventListener("gamepadconnected", (e) => {
-    let newPlayer = new Player(Input.fromGamepad(e.gamepad), e.gamepad.index)
+    let newPlayer = new Player(Input.fromGamepad(e.gamepad), e.gamepad.index + nonGamepadPlayers)
     State.players.push(newPlayer);
     State.registerCollider(newPlayer);
-    State.scoreboard.updateScores();
-});
-window.addEventListener("gamepaddisconnected", (e) => {
-    for (let i = 0; i < State.players.length; i++) {
-        const player = State.players[i + nonGamepadPlayers];
-        if (player.getIndex() == e.gamepad.index) {
-            // remove player from player array
-            State.unregisterCollider(player);
-            State.players = State.players.splice(i, 1);
-        }
-    }
+    State.scoreboard.players = null;
     State.scoreboard.updateScores();
 });
 
+window.addEventListener("gamepaddisconnected", (e) => {
+    State.unregisterCollider(State.players[e.gamepad.index + nonGamepadPlayers]);
+    State.players.splice(e.gamepad.index + nonGamepadPlayers, 1);
+    for (let i = 0; i < State.players.length; i++) {
+        State.players[i].index = i;
+    }
+    State.scoreboard.players = null;
+    State.scoreboard.updateScores();
+});
+
+function generatePowerup() {
+    // 1/7 chance
+    console.log("Hi from gen powerup");
+    if (Math.random() < 1/7) {
+        new Powerup(State.track.getNearestPoint([Math.random() * 2 - 1, Math.random() * 2 - 1]), 0.1, 0.1, "speed", 3, 1, 4);
+    }
+}
+
+setInterval(generatePowerup, 1000);
 
 /**
  * Draws everything
@@ -70,11 +79,10 @@ window.addEventListener("gamepaddisconnected", (e) => {
 function draw() {
     G.clear("#d9b962");
 
-    G.setLineCap(G.CapStyle.ROUND);
+    G.setLineCap("round");
 
     // drawRoad([[0.5, 0], [0.5, 0.5], [1.0, 0.5]]);
     State.track.draw();
-
 
     for (const collisionBody of State.collisionBodies) {
         if (collisionBody.shape == "square") {
@@ -98,11 +106,12 @@ function draw() {
         //G.fillRect([player.getX() - 0.025, player.getY() - 0.025], 0.05, 0.05);
     }
 
+    State.track.drawCheckpoints();
+
     G.maskEdge();
 }
 
 // new CollisionBody([0, -.4], 0.2, 0.2);
-new Powerup(State.track.getNearestPoint([.2, -.5]), 0.2, 0.2, "frictionless", 5, Infinity, 5);
 // new Powerup([-.2, -.5], 0.2, 0.2, "speed", 5, 2, 1);
 
 
@@ -143,6 +152,7 @@ function updateGame(timestamp) {
     }
     const delta = timestamp - lastTime;
 
+    State.track.update(delta);
     for (const player of State.players) {
         player.update(delta);
     }
