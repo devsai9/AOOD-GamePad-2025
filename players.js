@@ -1,11 +1,14 @@
 import { Keyboard } from "./keyboard.js";
 import { Vec2 } from "./vector.js";
 import { State } from "./state.js";
+import { cubicBezier, cubicBezierTangent } from "./track.js";
 
 /** @typedef {{ update: (self: Player, delta: number) => void }} InputMethod */
 /** @typedef {{ vel: (self: Player) => Vec2 }} RawInputSource */
 
 const TURN_THRESHOLD = 0.003;
+
+const playerOffsets = [1, -1, 3, -3];
 
 export const Input = {
     /** @type { (up: string, left: string, down: string, right: string) => InputMethod } */
@@ -46,7 +49,7 @@ export const Input = {
             const actual = navigator.getGamepads()[this.index];
             const x = actual.axes[0];
             const y = actual.axes[1];
-            console.log("Gamepad", x, y);
+            // console.log("Gamepad", x, y);
 
             const diffX = delta * x * .00001;
             const diffY = delta * y * .00001;
@@ -69,6 +72,7 @@ export const Input = {
 };
 
 let playerCount = 0;
+const PLAYER_BEGIN = 0.06;
 
 export class Player {
     color = "#f826b9";
@@ -80,17 +84,41 @@ export class Player {
     speedMultiplier = 1;
     frictionLess = false;
 
+    pendingCheckpoint = -1;
+    committedCheckpoint = 0;
+
+    laps = 0;
+
     /**
      * @param { InputMethod } inputMethod
      */
     constructor(inputMethod) {
-        playerCount++;
         this.inputMethod = inputMethod;
         this.weight = 0.02;
-        this.direction = 0;
+        this.direction = Math.PI;
         this.color = "#" +
             (Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, "0");
-        this.position[1] -= playerCount * .07;
+        //this.position[1] -= playerCount * .07;
+        const pins = State.track.pins;
+        const tangents = State.track.tangents;
+        const basePosition = cubicBezier(
+            PLAYER_BEGIN,
+            pins[0],
+            Vec2.sum(pins[0], tangents[0]),
+            Vec2.diff(pins[1], tangents[1]),
+            pins[1]
+        );
+        const offset = Vec2.perp(Vec2.norm(cubicBezierTangent(
+            PLAYER_BEGIN,
+            pins[0],
+            Vec2.sum(pins[0], tangents[0]),
+            Vec2.diff(pins[1], tangents[1]),
+            pins[1]
+        )));
+
+        this.position = Vec2.sum(basePosition, Vec2.scale(offset, playerOffsets[playerCount] * 0.03));
+
+        playerCount++;
     }
 
     applyFriction() {
@@ -117,6 +145,7 @@ export class Player {
     update(delta) {
         this.position[0] += this.velocity[0] * this.speedMultiplier;
         this.position[1] += this.velocity[1] * this.speedMultiplier;
+        this.processCheckpoint();
         this.inputMethod.update(this, delta);
         this.applyFriction();
         //this.direction += cap(shortAngleDist(dirNew, this.direction), 0.05);
@@ -176,7 +205,6 @@ export class Player {
     handleCollision(otherCar) {
         if (this.colliding) return;
         this.colliding = true;
-        console.log("collided");
 
         // punish them somehow, other than this
         this.velocity = [0, 0];
@@ -191,27 +219,60 @@ export class Player {
             case "speed":
                 this.speedMultiplier *= 2;
                 setTimeout(() => {
-                    console.log("speed powerup removed");
                     this.speedMultiplier /= 2;
                 }, duration * 1000);
                 break;
             case "shield":
                 this.colliding = true;
                 setTimeout(() => {
-                    console.log("shield powerup removed");
                     this.colliding = false;
                 }, duration * 1000);
                 break;
             case "frictionless":
                 this.frictionLess = true;
                 setTimeout(() => {
-                    console.log("frictionless powerup removed");
                     this.frictionLess = false;
                 }, duration * 1000);
                 break;
             default:
-                console.log("powerup has no valid type");
                 break;
         }
+    }
+
+    verifyCheckpoint(checkOld, checkNew) {
+        console.log("checking")
+        if (checkOld === State.track.pins.length - 1) {
+            this.laps++;
+            console.log("next lap");
+            return checkNew === 0;
+        }
+        return checkNew === checkOld + 1;
+    }
+
+    processCheckpoint() {
+        const checkpoint = State.track.queryCheckpoint(this.position);
+        //console.log(checkpoint);
+        if (checkpoint === -1) {
+            if (this.pendingCheckpoint === -1) return;
+            // Successfully collected a checkpoint
+            const checkNew = this.pendingCheckpoint;
+            this.pendingCheckpoint = -1;
+            if (this.verifyCheckpoint(this.committedCheckpoint, checkNew)) {
+                this.committedCheckpoint = checkNew;
+            }
+            else {
+                console.log("failure")
+                this.committedCheckpoint = 0;
+            }
+        }
+        else {
+            this.pendingCheckpoint = checkpoint;
+        }
+
+    }
+
+
+    passedCheckpoint(number) {
+        //console.log("Congratutaliatnos! You passed the checkpoint, of the number " + number);
     }
 }

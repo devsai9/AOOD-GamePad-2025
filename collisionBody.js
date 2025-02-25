@@ -1,6 +1,7 @@
 import { State } from "./state.js";
 
 export class CollisionBody {
+    shape = "square";
     constructor(position, width, height) {
         this.position = position;
         this.width = width;
@@ -17,25 +18,64 @@ export class CollisionBody {
         // collisionBodies.splice(collisionBodies.indexOf(this), 1);
         State.unregisterCollisionBody(this);
     }
+
+    x() {
+        return this.position.x;
+    }
+
+    y() {
+        return this.position.y;
+    }
+}
+
+export class Checkpoint extends CollisionBody {
+    constructor(position, radius, checkpointNumber) {
+        super(position, radius * 2, radius * 2);
+        this.shape = "circle";
+        this.radius = radius;
+        this.checkpointNumber = checkpointNumber;
+    }
+
+    handleCollision(player) {
+        player.passedCheckpoint(this.checkpointNumber);
+    }
 }
 
 export class Powerup extends CollisionBody {
-    constructor(position, width, height, type, durationSeconds) {
+    constructor(position, width, height, type, durationSeconds, usageTimes, regenerateTimeSeconds) {
         super(position, width, height);
         this.type = type;
         this.durationSeconds = durationSeconds;
+        this.usageTimes = usageTimes;
+        this.regenerateTimeSeconds = regenerateTimeSeconds;
+        this.enabled = true;
 
-        if (type === "speed") {
-            this.color = "green";
-        } else if (type === "shield") {
-            this.color = "blue";
-        } else if (type === "frictionless") {
-            this.color = "yellow";
-        }
+        this.determineColor();
     }
 
     handleCollision(player) {
         player.activatePowerup(this.type, this.durationSeconds);
-        super.remove();
+        this.usageTimes--;
+        if (this.usageTimes == 0) super.remove();
+        this.enabled = false;
+        this.color = "#00000000";
+        setTimeout(() => {
+            this.enabled = true;
+            this.determineColor();
+        }, this.regenerateTimeSeconds * 1000)
+    }
+
+    getEnabled() {
+        return this.enabled;
+    }
+
+    determineColor() {
+        if (this.type === "speed") {
+            this.color = "green";
+        } else if (this.type === "shield") {
+            this.color = "blue";
+        } else if (this.type === "frictionless") {
+            this.color = "yellow";
+        }
     }
 }

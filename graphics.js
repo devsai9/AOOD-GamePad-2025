@@ -1,3 +1,5 @@
+import { Vec2 } from "./vector.js";
+
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
 canvas.textContent = "Your ancient browser doesn't support canvas";
@@ -92,13 +94,28 @@ export function drawImage(image, [x, y]) {
     );
 }
 
-export function fillRect([x, y], w, h) {
-    ctx.fillRect(
+export function fillRect([x, y], w, h, angle = 0) {
+    if (angle === 0) ctx.fillRect(
         transformX(x),
         transformY(y),
         transformK(w),
         transformK(h)
     );
+    else {
+        const verts = [
+            [0, 0],
+            [w, 0],
+            [w, h],
+            [0, h]
+        ].map(v => Vec2.rotate(v, angle));
+        beginPath();
+        for (let i = 0; i < 4; i++) {
+            const vert = Vec2.sum(verts[i], [x, y]);
+            if (i === 0) moveTo(vert);
+            else lineTo(vert);
+        }
+        fill();
+    }
 }
 
 export function setFill(color) {
