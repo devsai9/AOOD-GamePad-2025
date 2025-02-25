@@ -73,7 +73,7 @@ function generatePowerup() {
     }
 }
 
-setInterval(generatePowerup, 5000);
+setInterval(generatePowerup, 4000);
 
 /**
  * Draws everything
