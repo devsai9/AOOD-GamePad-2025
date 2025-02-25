@@ -41,6 +41,8 @@ export class Checkpoint extends CollisionBody {
     }
 }
 
+export const powerupTypes = ["speed", "shield", "frictionless"];
+
 export class Powerup extends CollisionBody {
     /** 
      * @param {Vec2} position

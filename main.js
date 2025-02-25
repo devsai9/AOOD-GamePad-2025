@@ -3,7 +3,7 @@ import { Input, Player } from "./players.js";
 import { Track } from "./track.js";
 import { State, Scoreboard } from "./state.js";
 import { Vec2 } from "./vector.js";
-import { CollisionBody, Powerup } from "./collisionBody.js";
+import { CollisionBody, Powerup, powerupTypes } from "./collisionBody.js";
 
 State.track = Track.parse(
 `-3.43	-4.1
@@ -64,13 +64,16 @@ window.addEventListener("gamepaddisconnected", (e) => {
 
 function generatePowerup() {
     // 1/7 chance
-    console.log("Hi from gen powerup");
     if (Math.random() < 1/7) {
-        new Powerup(State.track.getNearestPoint([Math.random() * 2 - 1, Math.random() * 2 - 1]), 0.1, 0.1, "speed", 3, 1, 4);
+        new Powerup(
+            State.track.getNearestPoint([Math.random() * 2 - 1, Math.random() * 2 - 1]), 
+            0.1, 0.1, 
+            powerupTypes[Math.floor(Math.random() * powerupTypes.length)], 
+            3, 1, 4);
     }
 }
 
-setInterval(generatePowerup, 1000);
+setInterval(generatePowerup, 5000);
 
 /**
  * Draws everything

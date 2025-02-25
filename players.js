@@ -85,6 +85,7 @@ export class Player {
     colliding = false;
     speedMultiplier = 1;
     frictionLess = false;
+    activePowerups = {};
 
     pendingCheckpoint = -1;
     committedCheckpoint = 0;
@@ -217,24 +218,85 @@ export class Player {
     }
 
     activatePowerup(type, duration) {
+        if (this.activePowerups[type]) {
+            clearTimeout(this.activePowerups[type].timeoutId);
+            this.extendPowerup(type, duration);
+        } else {
+            this.startPowerup(type, duration);
+        }
+    }
+
+    startPowerup(type, duration) {
         switch (type) {
             case "speed":
                 this.speedMultiplier *= 2;
-                setTimeout(() => {
-                    this.speedMultiplier /= 2;
-                }, duration * 1000);
+                this.activePowerups[type] = {
+                    timeoutId: setTimeout(() => {
+                        this.speedMultiplier /= 2;
+                        delete this.activePowerups[type];
+                    }, duration * 1000),
+                    endTime: Date.now() + duration * 1000
+                };
                 break;
             case "shield":
                 this.colliding = true;
-                setTimeout(() => {
-                    this.colliding = false;
-                }, duration * 1000);
+                this.activePowerups[type] = {
+                    timeoutId: setTimeout(() => {
+                        this.colliding = false;
+                        delete this.activePowerups[type];
+                    }, duration * 1000),
+                    endTime: Date.now() + duration * 1000
+                };
                 break;
             case "frictionless":
                 this.frictionLess = true;
-                setTimeout(() => {
-                    this.frictionLess = false;
-                }, duration * 1000);
+                this.activePowerups[type] = {
+                    timeoutId: setTimeout(() => {
+                        this.frictionLess = false;
+                        delete this.activePowerups[type];
+                    }, duration * 1000),
+                    endTime: Date.now() + duration * 1000
+                };
+                break;
+            default:
+                break;
+        }
+    }
+
+    extendPowerup(type, duration) {
+        const remainingTime = this.activePowerups[type].endTime - Date.now();
+        const newDuration = remainingTime / 1000 + duration; // Calculate new total duration
+
+        switch (type) {
+            case "speed":
+                clearTimeout(this.activePowerups[type].timeoutId);
+                this.activePowerups[type] = {
+                    timeoutId: setTimeout(() => {
+                        this.speedMultiplier /= 2;
+                        delete this.activePowerups[type];
+                    }, newDuration * 1000),
+                    endTime: Date.now() + newDuration * 1000
+                };
+                break;
+            case "shield":
+                clearTimeout(this.activePowerups[type].timeoutId);
+                this.activePowerups[type] = {
+                    timeoutId: setTimeout(() => {
+                        this.colliding = false;
+                        delete this.activePowerups[type];
+                    }, newDuration * 1000),
+                    endTime: Date.now() + newDuration * 1000
+                };
+                break;
+            case "frictionless":
+                clearTimeout(this.activePowerups[type].timeoutId);
+                this.activePowerups[type] = {
+                    timeoutId: setTimeout(() => {
+                        this.frictionLess = false;
+                        delete this.activePowerups[type];
+                    }, newDuration * 1000),
+                    endTime: Date.now() + newDuration * 1000
+                };
                 break;
             default:
                 break;
