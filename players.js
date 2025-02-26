@@ -64,7 +64,7 @@ export const Input = {
     /** @type { (inputSrc: RawInputSource) => InputMethod } */
     fromMachine: (inputSrc) => ({
         /**
-         * @param { Player } self 
+         * @param { Player } self
          */
         update(self, delta) {
             const v = inputSrc.vel(self);
@@ -137,7 +137,7 @@ export class Player {
         const dir = this.velocity; //Vec2.norm(this.velocity);
         const friction = Vec2.scale(
             dir,
-            this.weight * (State.track.isOnTrack(this.position) ? 1 : (!this.frictionLess ? 5 : 1)),
+            this.weight * (State.track.isOnTrack(this.position) ? 1 : (!this.frictionLess ? 4 : 1)),
         );
         if (Vec2.len(friction) > Vec2.len(this.velocity)) {
             this.velocity[0] = 0;

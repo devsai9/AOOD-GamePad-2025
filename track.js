@@ -6,7 +6,7 @@ import { Checkpoint } from "./collisionBody.js";
  * @typedef { import("./vector.js").Vec2 } Vec2
  */
 
-const ROAD_SCALE = 0.75;
+const ROAD_SCALE = 1.00;
 const DOTS = [0.04, 0.08].map(x => x * ROAD_SCALE);
 
 function drawRaw(pins, tangents) {
@@ -27,7 +27,7 @@ const FINISH_COUNT_X = 3;
 const FINISH_COUNT_Y = 7;
 
 /**
- * @param { number } num 
+ * @param { number } num
  * @returns { string }
  */
 function toNibble(num) {
@@ -50,7 +50,7 @@ function hexify(r, g, b) {
 }
 
 /**
- * @param { string } hex 
+ * @param { string } hex
  */
 function darker(hex, k = 0.2) {
     const [r, g, b] = parseColor(hex);
@@ -69,10 +69,10 @@ function mix(c1, c2, t) {
 }
 
 /**
- * 
- * @param { Track } self 
- * @param { Vec2 } pin 
- * @param { Vec2 } tangent 
+ *
+ * @param { Track } self
+ * @param { Vec2 } pin
+ * @param { Vec2 } tangent
  */
 function drawFinish(self, pin, tangent) {
     const stepX = FINISH_SPAN / FINISH_COUNT_X;
@@ -105,11 +105,11 @@ const flagPalette = [
 ];
 
 /**
- * 
- * @param { Track } self 
- * @param { Vec2 } pin 
- * @param { Vec2 } tangent 
- * @param { number } id 
+ *
+ * @param { Track } self
+ * @param { Vec2 } pin
+ * @param { Vec2 } tangent
+ * @param { number } id
  */
 function drawCheckpoint(self, pin, tangent, id) {
     const offset = Vec2.perp(Vec2.norm(tangent));
@@ -144,12 +144,12 @@ function drawCheckpoint(self, pin, tangent, id) {
         if (i === 0) G.moveTo(vert);
         else G.lineTo(vert);
     }
-    G.fill();    
+    G.fill();
 }
 
 /**
- * 
- * @param { string } l 
+ *
+ * @param { string } l
  * @return { Vec2[] }
  */
 function transformDesmosData(l) {
@@ -180,8 +180,8 @@ const CHECKPOINT_SIZE = ROAD_SCALE * 1.4 * 0.1;
 export class Track {
     /**
      * Create a track with the specified pins and tangents
-     * @param { Vec2[] } pins 
-     * @param { Vec2[] } tangents 
+     * @param { Vec2[] } pins
+     * @param { Vec2[] } tangents
      */
     constructor(pins, tangents) {
         this.pins = pins;
@@ -200,9 +200,9 @@ export class Track {
     }
 
     /**
-     * @param { string } pins 
-     * @param { string } tangents 
-     * @returns 
+     * @param { string } pins
+     * @param { string } tangents
+     * @returns
      */
     static parse(pins, tangents) {
         const p = transformDesmosData(pins);
@@ -221,7 +221,7 @@ export class Track {
         G.setStroke(this.style.main);
         G.setLineWidth(this.width - 0.03 * ROAD_SCALE);
         drawRaw(this.pins, this.tangents);
-        
+
         G.beginPath();
         G.setLineDash(DOTS);
         G.setStroke(this.style.dash);
@@ -264,10 +264,10 @@ export class Track {
             const ctrl1 = Vec2.sum(start, this.tangents[i]);
             const end = this.pins[i + 1] || this.pins[0];
             const ctrl2 = Vec2.diff(end, this.tangents[i + 1] || this.tangents[0]);
-            
+
             if (Vec2.dist(this.findNearestPoint(point, start, ctrl1, ctrl2, end), point) <= this.width / 2) return true;
         }
-        
+
         return false;
     }
 
@@ -279,7 +279,7 @@ export class Track {
             const ctrl1 = Vec2.sum(start, this.tangents[i]);
             const end = this.pins[i + 1] || this.pins[0];
             const ctrl2 = Vec2.diff(end, this.tangents[i + 1] || this.tangents[0]);
-            
+
             const pt = this.findNearestPoint(point, start, ctrl1, ctrl2, end);
             const dis = Vec2.dist(pt, point);
             if (dis < min) {
@@ -287,7 +287,7 @@ export class Track {
                 found = pt;
             }
         }
-        
+
         return found;
     }
 
