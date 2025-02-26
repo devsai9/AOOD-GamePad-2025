@@ -22,6 +22,7 @@ canvas {
    left: 0;
    padding: .4rem;
    color: #fff;
+   transition: all 3s ease-in-out;
 }
 
 .scoreboard span {
@@ -34,8 +35,48 @@ canvas {
    font-size: 1.3rem;
 }
 
+.scoreboard.center {
+   margin: 0;
+   position: absolute;
+   left: 50%;
+   top: 50%;
+   transform: translate(-50%, -50%);
+}
+
 .score-entry {
-   border-radius: 5px;
+   border-radius: 0.3rem;
    -moz-user-select: none;
+   -webkit-user-select: none;
    user-select: none;
+}
+
+.stopwatch {
+   position: fixed;
+   bottom: 0;
+   left: 0;
+   padding: .4rem;
+   margin: .4rem;
+   border-radius: .4rem;
+   color: #000;
+   background-color: #fff;
+   font-family: sans-serif;
+   min-width: 5rem;
+   text-align: center;
+}
+
+.ready {
+   -moz-user-select: none;
+   -webkit-user-select: none;
+   user-select: none;
+   position: absolute;
+   left: 50%;
+   transform: translate(-50%);
+   margin-top: 2rem;
+   padding: 0.5rem 1rem;
+   font-size: 3rem;
+   font-family: sans-serif;
+   color: black;
+   border-radius: 0.6rem;
+   cursor: pointer;
+   border: solid 0.2rem #555;
 }

@@ -82,7 +82,7 @@ function drawFinish(self, pin, tangent) {
     const dir = Math.atan2(tangent[1], tangent[0]);
     for (let x = 0; x < FINISH_COUNT_X; x++) {
         for (let y = 0; y < FINISH_COUNT_Y; y++) {
-            G.setFill((x + y) % 2 === 0 ? "#000" : "#fff");
+            G.setFill((x + y) % 2 === 0 ? mix("#000000", "#ffffff", self.status[0]) : "#fff");
             const pos = Vec2.rotate([beginX + stepX * x, beginY + stepY * y], dir);
             G.fillRect(Vec2.sum(pos, pin), stepX, stepY, dir);
         }

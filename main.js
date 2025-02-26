@@ -1,7 +1,7 @@
 import * as G from "./graphics.js";
 import { Input, Player } from "./players.js";
 import { Track } from "./track.js";
-import { State, Scoreboard } from "./state.js";
+import { State, Scoreboard, Stopwatch } from "./state.js";
 import { Vec2 } from "./vector.js";
 import { CollisionBody, Powerup, powerupTypes } from "./collisionBody.js";
 
@@ -26,26 +26,73 @@ let nonGamepadPlayers = 0;
 
 // let machinePlayer = new Player(Input.fromMachine({
 //     vel(self) {
-//         return [0.001, 0];
+//         const targetPoint = State.track.getNearestPoint(self.position);
+//         const directionToTarget = Vec2.norm(Vec2.diff(targetPoint, self.position));
+//         const forwardVelocity = Vec2.scale(directionToTarget, 0.1);
+//         return forwardVelocity;
 //     }
 // }));
 // State.players.push(machinePlayer);
-// State.registerCollider(machinePlayer);
-const wsadPlayer = new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD"), 0);
-const arrowPlayer = new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"), 1);
-State.players.push(wsadPlayer);
-State.players.push(arrowPlayer);
-State.registerCollider(wsadPlayer);
-State.registerCollider(arrowPlayer);
-nonGamepadPlayers += 2;
 
 let scoreboardElement = document.querySelector(".scoreboard");
 let scoreboard = new Scoreboard(scoreboardElement);
 State.registerScoreboard(scoreboard);
 
+let stopwatchElement = document.querySelector(".stopwatch");
+let stopwatch = new Stopwatch(stopwatchElement);
+State.stopwatch = stopwatch;
+
+const readyButton = document.querySelector(".ready");
+readyButton.addEventListener("click", function() {
+    if (State.players.length === 0) {
+        alert("You need at least one player to start");
+        return;
+    }
+    State.status = "running";
+    this.style.display = "none";
+    init();
+});
+
+const keyboardPlayers = {};
+
+document.body.addEventListener("keydown", (e) => {
+    if (State.status !== "pending") return;
+    const key = e.code;
+    switch (key) {
+        case "KeyW":
+        case "KeyA":
+        case "KeyS":
+        case "KeyD":
+            if (keyboardPlayers.wasd) return;
+            console.log("wasd")
+            keyboardPlayers.wasd = new Player(Input.fromKeys("KeyW", "KeyA", "KeyS", "KeyD"), 0);
+            State.players.push(keyboardPlayers.wasd);
+            State.registerCollider(keyboardPlayers.wasd);
+            break;
+        case "ArrowUp":
+        case "ArrowLeft":
+        case "ArrowDown":
+        case "ArrowRight":
+            if (keyboardPlayers.arrow) return;
+            keyboardPlayers.arrow = new Player(Input.fromKeys("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"), 0);
+            State.players.push(keyboardPlayers.arrow);
+            State.registerCollider(keyboardPlayers.arrow);
+            break;
+    }
+});
+
+function init() {
+    State.scoreboard.players = null;
+    State.scoreboard.updateScores();
+    nonGamepadPlayers += 2;
+
+    State.powerupInterval = window.setInterval(generatePowerup, 4000);
+    stopwatch.start();
+}
 
 window.addEventListener("gamepadconnected", (e) => {
-    let newPlayer = new Player(Input.fromGamepad(e.gamepad), e.gamepad.index + nonGamepadPlayers)
+    if (State.status !== "pending") return;
+    let newPlayer = new Player(Input.fromGamepad(e.gamepad), e.gamepad.index + nonGamepadPlayers);
     State.players.push(newPlayer);
     State.registerCollider(newPlayer);
     State.scoreboard.players = null;
@@ -56,15 +103,14 @@ window.addEventListener("gamepaddisconnected", (e) => {
     State.unregisterCollider(State.players[e.gamepad.index + nonGamepadPlayers]);
     State.players.splice(e.gamepad.index + nonGamepadPlayers, 1);
     for (let i = 0; i < State.players.length; i++) {
-        State.players[i].index = i;
+        State.players[i].id = i;
     }
     State.scoreboard.players = null;
     State.scoreboard.updateScores();
 });
 
 function generatePowerup() {
-    // 1/7 chance
-    if (Math.random() < 1/7) {
+    if (Math.random() < 1/4) {
         new Powerup(
             State.track.getNearestPoint([Math.random() * 2 - 1, Math.random() * 2 - 1]), 
             0.1, 0.1, 
@@ -72,8 +118,6 @@ function generatePowerup() {
             3, 1, 4);
     }
 }
-
-setInterval(generatePowerup, 4000);
 
 /**
  * Draws everything
@@ -114,10 +158,6 @@ function draw() {
     G.maskEdge();
 }
 
-// new CollisionBody([0, -.4], 0.2, 0.2);
-// new Powerup([-.2, -.5], 0.2, 0.2, "speed", 5, 2, 1);
-
-
 function drawBox([x, y], w, h, dir) {
     G.beginPath();
     const verts = [
@@ -141,13 +181,8 @@ function drawBox([x, y], w, h, dir) {
 draw();
 window.addEventListener("resize", draw);
 
-
-
-
-
 let lastTime;
 requestAnimationFrame(updateGame);
-
 
 function updateGame(timestamp) {
     if (!lastTime) {
@@ -162,34 +197,7 @@ function updateGame(timestamp) {
     State.checkCollisions();
     lastTime = timestamp;
     draw();
-    requestAnimationFrame(updateGame);
+
+    stopwatch.update();    requestAnimationFrame(updateGame);
 }
 
-
-/*
-
-- Palette for different biomes -
-[Plains]
-bg: #8de645
-
-[Desert]
-bg: #d9b962
-
-*/
-
-/*
-{
-    type: GAMEPAD || KEYBOARD
-    object: gamepadIndex || key bindings
-}
-
-
-
-    player.update() {
-    if input.type == GAMEPAD {
-    //
-    }
-    elif
-    }
-
-    */

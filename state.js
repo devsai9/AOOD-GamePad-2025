@@ -5,6 +5,7 @@ export const State = {
     /** @type { import("./players.js").Player[] } */
     players: [],
     colliders: [],
+    status: "pending",
 
     registerCollisionBody(body) {
         this.collisionBodies.push(body);
@@ -91,7 +92,17 @@ export const State = {
     registerScoreboard(scoreboard) {
         this.scoreboard = scoreboard;
         scoreboard.updateScores();
-    }
+    },
+
+    gameOver() {
+        console.log("Game over");
+        this.status = "over";
+        window.clearInterval(this.powerupInterval);
+        this.stopwatch.stop();
+        document.querySelector(".scoreboard").classList.add("center");
+    },
+
+    powerupInterval: null
 };
 
 function rectanglesColliding([x1, y1], w1, h1, [x2, y2], w2, h2) {
@@ -146,5 +157,37 @@ export class Scoreboard {
             output += `<span class="score-entry" style="background-color: ${player.color}">Score: ${player.laps} # ${player.committedCheckpoint}/${checkpoints}</span><br>`;
         }
         this.element.innerHTML = output;
+    }
+}
+
+export class Stopwatch {
+    constructor(element) {
+        this.element = element;
+        this.paused = true;
+    }
+
+    start() {
+        this.timeMs = 0;
+        this.lastTime = Date.now();
+        this.paused = false;
+    }
+
+    stop() {
+        this.paused = true;
+    }
+
+    update() {
+        if (!this.paused) {
+            const now = Date.now();
+            let timeDiffMs = now - this.lastTime;
+            this.timeMs += timeDiffMs;
+            this.lastTime = Date.now();
+            this.updateElement();
+        }
+    }
+
+    updateElement() {
+        let timeSeconds = this.timeMs / 1000;
+        this.element.innerText = timeSeconds; // format this
     }
 }

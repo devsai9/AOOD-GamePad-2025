@@ -63,10 +63,13 @@ export const Input = {
     }),
     /** @type { (inputSrc: RawInputSource) => InputMethod } */
     fromMachine: (inputSrc) => ({
+        /**
+         * @param { Player } self 
+         */
         update(self, delta) {
             const v = inputSrc.vel(self);
-            self.velocity[0] = v.x * delta;
-            self.velocity[1] = v.y * delta;
+            self.velocity[0] = v[0] * delta;
+            self.velocity[1] = v[1] * delta;
             self.calculateDir();
         },
     }),
@@ -146,6 +149,7 @@ export class Player {
     }
 
     update(delta) {
+        if (State.status !== "running") return;
         this.position[0] += this.velocity[0] * this.speedMultiplier;
         this.position[1] += this.velocity[1] * this.speedMultiplier;
         this.processCheckpoint();
@@ -307,6 +311,9 @@ export class Player {
         console.log("checking")
         if (checkOld === State.track.pins.length - 1) {
             this.laps++;
+            if (this.laps === 1) {
+                State.gameOver();
+            }
             console.log("next lap");
             return checkNew === 0;
         }
