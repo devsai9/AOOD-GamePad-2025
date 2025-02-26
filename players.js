@@ -75,6 +75,11 @@ export const Input = {
     }),
 };
 
+function playSfx() {
+    const audio = new Audio("sound.mp3");
+    audio.play();
+}
+
 let playerCount = 0;
 const PLAYER_BEGIN = 0.06;
 
@@ -222,6 +227,7 @@ export class Player {
     }
 
     activatePowerup(type, duration) {
+        playSfx();
         if (this.activePowerups[type]) {
             clearTimeout(this.activePowerups[type].timeoutId);
             this.extendPowerup(type, duration);
@@ -311,7 +317,7 @@ export class Player {
         console.log("checking")
         if (checkOld === State.track.pins.length - 1) {
             this.laps++;
-            if (this.laps === 1) {
+            if (this.laps === 2) {
                 State.gameOver();
             }
             console.log("next lap");
