@@ -5,13 +5,11 @@ In this game, the user is able to use WASD, Arrow keys, and/or as many gamepads 
 Use: https://devsai9.github.io/AOOD-GamePad-2025
 
 ## Features
-<ul>
-  <li>Very flexible and customizable track (from the code) using Bézier curves</li>
-  <li>Location-based friction (e.g. going off the track slows you down)</li>
-  <li>Powerups and sound effects</li>
-  <li>Stopwatch to keep track of time</li>
-  <li>Leaderboard with the number of laps each person has completed</li>
-</ul>
+- Very flexible and customizable track (from the code) using Bézier curves
+- Location-based friction (e.g. going off the track slows you down)
+- Powerups and sound effects
+- Stopwatch to keep track of time
+- Leaderboard with the number of laps each person has completed
 
 ## What we learned/refined
 1. Working with Bézier curves
@@ -21,9 +19,9 @@ Use: https://devsai9.github.io/AOOD-GamePad-2025
 5. How to run a sprint project and use a scrumboard
 
 ## Technologies used
-<ul>
-  <li>HTML</li>
-  <li>CSS</li>
-  <li>JavaScript</li>
-  <li>Desmos</li>
-</ul>
+- HTML
+- CSS
+- JavaScript
+- Desmos
+- Visual Studio Code
+- Git & GitHub
